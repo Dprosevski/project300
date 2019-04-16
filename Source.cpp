@@ -8,13 +8,13 @@
 #include "EachLine.h"
 #include "OpTable.h"
 #include "SymTab.h"
-
+//test
 using namespace std;
 
 string decToHex(int num);
 string hexToBin(string hexString);
 string binToHex(string binary);
-string genObjectCode(string mnemonic, int form, string opcode, string variable, string loc, string nextLoc, string ta, string nextMnemonic, string baseLoc);
+string genObjectCode(string sym, string mnemonic, int form, string opcode, string variable, string loc, string nextLoc, string ta, string app, string nextMnemonic, string baseLoc, string baseV);
 unsigned long  hexToDec(string hexString);
 
 int main() {
@@ -28,7 +28,7 @@ int main() {
 	string getLine;
 	string word;
 	string hex;
-	string tempSymLoc, baseLoc;
+	string tempSymLoc, baseLoc, baseVar;
 	int lineCount = 0;
 	int tempInt;
 	char temp;
@@ -106,6 +106,7 @@ int main() {
 					   
 			if (lineObjects[i].com == "BASE") {
 				baseLoc = lineObjects[i - 1].locCount;
+				baseVar = lineObjects[i].var;
 				found == true;
 			}
 			if (lineObjects[i].com == opTab.mnem[k] || lineObjects[i].com == "+" + opTab.mnem[k]) {
@@ -180,10 +181,12 @@ int main() {
 			}
 
 			if (found == true) {
+				if (symTabVec[0].appearance == "")
+					symTabVec[0].appearance = lineObjects[j + 1].locCount;
 				break;
 			}
 		}
-		lineObjects[j].objCode = genObjectCode(lineObjects[j].mnem, lineObjects[j].format, lineObjects[j].op, lineObjects[j].var, lineObjects[j].locCount, lineObjects[j + 1].locCount, tempSymLoc, lineObjects[j + 1].mnem, baseLoc);
+		lineObjects[j].objCode = genObjectCode(lineObjects[j].sym, lineObjects[j].mnem, lineObjects[j].format, lineObjects[j].op, lineObjects[j].var, lineObjects[j].locCount, lineObjects[j + 1].locCount, tempSymLoc, symTabVec[0].appearance, lineObjects[j + 1].mnem, baseLoc, baseVar);
 		tempSymLoc = "";
 	}
 
@@ -227,13 +230,14 @@ int main() {
 
 
 
-string genObjectCode(string mnem, int format, string op, string var, string locCount, string strNextLocCount, string strTa, string nextMnem, string baseL) {
+string genObjectCode(string sym, string mnem, int format, string op, string var, string locCount, string strNextLocCount, string strTa, string app, string nextMnem, string baseL, string baseV) {
 	string  binString, hexString;
 	int  intDisp, intTemp = 0;
 	string n = "1", i = "1", x = "0", b = "0", p = "1", e = "0", disp, r1 = "0", r2 = "0";
 	string A = "0", X = "1", L = "2", PC = "8", SW = "9", B = "3", S = "4", T = "5", F = "6";
 
 	unsigned long TA = hexToDec(strTa);
+	unsigned long BASE = hexToDec(baseL);
 	unsigned long intLocCount = hexToDec(locCount);
 	unsigned long intNextLocCount = hexToDec(strNextLocCount);
 
@@ -333,7 +337,7 @@ string genObjectCode(string mnem, int format, string op, string var, string locC
 			}
 		}
 		else if (var[0] == '@') {
-			disp = "000";
+			disp = app.substr(1, app.length());
 			i = "0";
 		}
 		else if (p == "1") {
@@ -379,7 +383,16 @@ string genObjectCode(string mnem, int format, string op, string var, string locC
 				}
 				else {
 					p = "0"; b = "1";
-					disp = baseL.substr(1, baseL.length());
+					if (var == baseV) {
+						disp = "000";
+					}
+					else {
+						disp = decToHex(BASE);
+					}
+					if (disp.length() < 3) {
+						intTemp = 3 - disp.length();
+						disp = string(intTemp, '0') + disp;
+					}
 				}
 			}
 		}
@@ -390,7 +403,11 @@ string genObjectCode(string mnem, int format, string op, string var, string locC
 			}
 		}
 		//exit
-		if (var == "EXIT" || mnem == "RSUB") {
+		if (sym == "EXIT") {
+			disp = "000";
+		}
+
+		if (mnem == "RSUB") {
 			b = "0";
 			disp = "000";
 		}
