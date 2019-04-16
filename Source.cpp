@@ -106,7 +106,7 @@ int main() {
 					   
 			if (lineObjects[i].com == "BASE") {
 				baseLoc = lineObjects[i - 1].locCount;
-				baseVar = lineObjects[i - 1].var;
+				baseVar = lineObjects[i].var;
 				found == true;
 			}
 			if (lineObjects[i].com == opTab.mnem[k] || lineObjects[i].com == "+" + opTab.mnem[k]) {
@@ -381,8 +381,14 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 				}
 				else {
 					p = "0"; b = "1";
-					intTemp = TA - BASE;
-					disp = decToHex(intTemp);
+					if (var == baseV) {
+						TA = BASE;
+						intTemp = TA - BASE;
+						disp = decToHex(intTemp);
+					}
+					else {
+						disp = decToHex(BASE);
+					}
 					if (disp.length() < 3) {
 						intTemp = 3 - disp.length();
 						disp = string(intTemp, '0') + disp;
