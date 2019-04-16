@@ -14,7 +14,7 @@ using namespace std;
 string decToHex(int num);
 string hexToBin(string hexString);
 string binToHex(string binary);
-string genObjectCode(string sym, string mnemonic, int form, string opcode, string variable, string loc, string nextLoc, string ta, string nextMnemonic, string baseLoc, string baseV);
+string genObjectCode(string sym, string mnemonic, int form, string opcode, string variable, string loc, string nextLoc, string ta, string app, string nextMnemonic, string baseLoc, string baseV);
 unsigned long  hexToDec(string hexString);
 
 int main() {
@@ -181,10 +181,12 @@ int main() {
 			}
 
 			if (found == true) {
+				if (symTabVec[0].appearance == "")
+					symTabVec[0].appearance = lineObjects[j + 1].locCount;
 				break;
 			}
 		}
-		lineObjects[j].objCode = genObjectCode(lineObjects[j].sym, lineObjects[j].mnem, lineObjects[j].format, lineObjects[j].op, lineObjects[j].var, lineObjects[j].locCount, lineObjects[j + 1].locCount, tempSymLoc, lineObjects[j + 1].mnem, baseLoc, baseVar);
+		lineObjects[j].objCode = genObjectCode(lineObjects[j].sym, lineObjects[j].mnem, lineObjects[j].format, lineObjects[j].op, lineObjects[j].var, lineObjects[j].locCount, lineObjects[j + 1].locCount, tempSymLoc, symTabVec[0].appearance, lineObjects[j + 1].mnem, baseLoc, baseVar);
 		tempSymLoc = "";
 	}
 
@@ -228,7 +230,7 @@ int main() {
 
 
 
-string genObjectCode(string sym, string mnem, int format, string op, string var, string locCount, string strNextLocCount, string strTa, string nextMnem, string baseL, string baseV) {
+string genObjectCode(string sym, string mnem, int format, string op, string var, string locCount, string strNextLocCount, string strTa, string app, string nextMnem, string baseL, string baseV) {
 	string  binString, hexString;
 	int  intDisp, intTemp = 0;
 	string n = "1", i = "1", x = "0", b = "0", p = "1", e = "0", disp, r1 = "0", r2 = "0";
@@ -335,7 +337,7 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 			}
 		}
 		else if (var[0] == '@') {
-			disp = "000";
+			disp = app.substr(1, app.length());
 			i = "0";
 		}
 		else if (p == "1") {
@@ -382,9 +384,7 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 				else {
 					p = "0"; b = "1";
 					if (var == baseV) {
-						TA = BASE;
-						intTemp = TA - BASE;
-						disp = decToHex(intTemp);
+						disp = "000";
 					}
 					else {
 						disp = decToHex(BASE);
