@@ -302,24 +302,20 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 		if (var[0] == '#') {
 			n = "0"; p = "0";
 			if (var[1] > 48 && var[1] <= 57) { //check ascii to see if its a number
-				if (format == 3) {
-					disp = var.substr(1, var.length());
-					if (disp.length() < format) {
-						intTemp = format - disp.length();
-						disp = string(intTemp, '0') + disp;
-					}
-				}
-				if (format == 4) {
 					disp = var.substr(1, var.length());
 					stringstream ss(disp); //get the starting loc from the first line
 					ss >> intTemp;
 					disp = decToHex(intTemp);
-					if (disp.length() < format+1) {
-						intTemp = (format + 1) - disp.length();
+					if (disp.length() < format && format == 3) {
+						intTemp = format - disp.length();
 						disp = string(intTemp, '0') + disp;
 					}
-				}
-
+					else if (format == 4) {
+						if (disp.length() < format + 1) {
+							intTemp = (format + 1) - disp.length();
+							disp = string(intTemp, '0') + disp;
+						}
+					}
 			}
 
 			else {
@@ -351,6 +347,7 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 			if (intDisp < 0) {
 				if (mnem[0] == 'J') {
 					int i = 0;
+					//making absolute value, converting to binary and doing twos complement
 					intTemp = abs(intDisp);
 					disp = decToHex(intTemp);
 					disp = hexToBin(disp);
@@ -422,7 +419,6 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 			hexString = binToHex(binString) + disp; //convert to hex
 		}
 	}
-
 
 	return hexString;
 }

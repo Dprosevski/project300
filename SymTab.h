@@ -14,5 +14,6 @@ public:
 	SymTab() {};
 	string symbol;
 	string locCount;
+	string appearance;
 };
 #endif
