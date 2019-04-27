@@ -310,7 +310,7 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 						intTemp = format - disp.length();
 						disp = string(intTemp, '0') + disp;
 					}
-					else if (format == 4) {
+					else {
 						if (disp.length() < format + 1) {
 							intTemp = (format + 1) - disp.length();
 							disp = string(intTemp, '0') + disp;
