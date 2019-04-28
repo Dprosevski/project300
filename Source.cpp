@@ -8,6 +8,7 @@
 #include "EachLine.h"
 #include "OpTable.h"
 #include "SymTab.h"
+#include "ProgBlocks.h"
 //test
 using namespace std;
 
@@ -20,11 +21,13 @@ unsigned long  hexToDec(string hexString);
 int main() {
 	EachLine * line; //object for each line
 	SymTab * symTab;
+	ProgBlock * progBlock;
 	OpTable opTab; //op table object
 	vector<SymTab> symTabVec; //vector for each symbol
 	vector<EachLine> lineObjects; //vector for each line
+	vector <ProgBlock> progBlockVec; //vector for each block
 	ifstream inFile;
-	string fileName = "Files\\functions.txt";
+	string fileName = "Files\\prog_blocks.txt";
 	string getLine;
 	string word;
 	string hex;
@@ -80,16 +83,51 @@ int main() {
 	int progStart = 0;
 	stringstream ss(lineObjects[0].var); //get the starting loc from the first line
 	ss >> progStart;
-	int tempLength = 0;
+	int tempLength = 0, block = 0;
 	int count = 0;
 	int i = progStart;
 	int pass = 1;
+	int once = 0;
 
-
+	progBlock = new ProgBlock;
+	progBlockVec.push_back(*progBlock);
+	progBlockVec[0].name = ""; //default
+	progBlockVec[0].number = 0;
+	progBlockVec[0].address = "0000";
+	
 	//Pass 1: find loc counter
 	while (lineObjects[i].com != "END") {
 		int k = 0;
 		bool found = false;
+		if (lineObjects[i].com == "USE") {
+			for (int s = 0; s < (int)progBlockVec.size(); s++) {
+				if (lineObjects[i].var == progBlockVec[s].name) {
+					
+					if (lineObjects[i].var != "") {
+						progBlockVec[s].address = decToHex(hexToDec(progBlockVec[s].length) + hexToDec(progBlockVec[block].address));
+					}
+					lineObjects[i].locCount = progBlockVec[s].length;
+					block = s;
+
+					progBlockVec[s].length = decToHex(hexToDec(lineObjects[i].locCount) + 3);
+					break;
+				}
+				if (s == (int)progBlockVec.size()-1) {
+					progBlockVec[s].length = decToHex(hexToDec(lineObjects[i].locCount) + lineObjects[i].format);
+					progBlockVec.push_back(*new ProgBlock);
+					progBlockVec[(int)progBlockVec.size()-1].name = lineObjects[i].var;
+					if (once == 0) {
+						progBlockVec[0].length = lineObjects[i].locCount;
+						once = 1;
+					}
+					lineObjects[i].locCount = "0000";
+					count = 0;
+					block = s;
+					progBlockVec[(int)progBlockVec.size()-1].number = block;
+					break;
+				}
+			}
+		}
 
 		if (lineObjects[i].com == "START" || lineObjects[i].sym == ".") {
 			found = true;
@@ -161,7 +199,7 @@ int main() {
 			lineObjects[i + 1].locCount = "";
 		}
 		i++;
-	}
+	} //END OF PASS 1
 
 	cout << "\n\n\nSYMTAB:\n";
 	i = 0;
