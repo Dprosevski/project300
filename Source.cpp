@@ -20,6 +20,7 @@ Date: 04/29/2019
 using namespace std;
 
 //functions prototypes
+string fixLength(string variable, int size, char addThis, bool front);
 string decToHex(int num);
 string hexToBin(string hexString);
 string binToHex(string binary);
@@ -42,6 +43,7 @@ int main() {
 	string word;
 	string hex;
 	string tempSymLoc, baseLoc, baseVar;
+	string lastLoc; //to store last location
 	int lineCount = 0;
 	int tempInt;
 	char temp;
@@ -119,10 +121,7 @@ int main() {
 		if (lineObjects[i].com == "USE") {
 			tempInt = 0;
 			for (int s = 0; s < (int)progBlockVec.size(); s++) {
-				if (progBlockVec[s].length.length() < 4) { //if length != 4 characters long
-					tempLength = 4 - progBlockVec[s].length.length();
-					progBlockVec[s].length = string(tempLength, '0') + progBlockVec[s].length;
-				}
+				progBlockVec[s].length = fixLength(progBlockVec[s].length, 4, '0', true);
 
 				if (s == (int)progBlockVec.size() - 1) { //creating a new one
 					progBlockVec[s].length = decToHex(hexToDec(lineObjects[i].locCount) + lineObjects[i].format);
@@ -221,16 +220,14 @@ int main() {
 		}
 
 		hex = decToHex(count); //convert loc counter from decimal to hexadecimal
-		if (hex.length() < 4) { //if length of hex string is not 4 long add zeros to make it 4 long
-			tempLength = 4 - hex.length();
-			hex = string(tempLength, '0') + hex;
-		}
+		hex = fixLength(hex, 4, '0', true); //fix the length using the function
 		lineObjects[i + 1].locCount = hex; //put the hex addres in the next loc counter line
 
 		if (lineObjects[i + 1].locCount == lineObjects[i].locCount && lineObjects[i].com != "EQU" && lineObjects[i].com != "USE") { //if previous loc count is the same as current, make previous ""
 			lineObjects[i].locCount = "";
 		}
 		if (lineObjects[i + 1].com == "END") { //make next location after end empty
+			lastLoc = lineObjects[i + 1].locCount;
 			lineObjects[i + 1].locCount = "";
 		}
 		i++;
@@ -285,6 +282,25 @@ int main() {
 		i++;
 	} //end of print
 
+	//printing the object program
+	lineObjects[0].sym = fixLength(lineObjects[0].sym, 6, ' ', false);
+	lineObjects[1].locCount = fixLength(lineObjects[1].locCount, 6, '0', true);
+	lastLoc = fixLength(lastLoc, 6, '0', true);
+
+	cout << "\n\n\n\nObject Program:\n\n";
+	cout << "H" << lineObjects[0].sym.substr(0,6) << lineObjects[1].locCount << lastLoc<<endl;
+	i = 0;
+	while (i != lineCount) { //loop to the number of lines in file
+		cout << "T";
+		tempInt = 0;
+		while (i != lineCount && tempInt != 29) { //loop to the number of lines in file
+			tempInt = i;
+			cout << lineObjects[i].objCode;
+			i++;
+		}
+	}
+	cout << "\nE" << lineObjects[1].locCount<< endl;
+
 
 	cout << string(5, '\n'); //space 5 new lines for clarity
 	inFile.close(); //close input file
@@ -293,6 +309,10 @@ int main() {
 	return 0;
 }
 
+
+
+
+//FUNCTIONS
 //													|||||||||||||||||||||||||||||||||||||function to generate object code|||||||||||||||||||||||||||||||||||||
 string genObjectCode(string sym, string mnem, int format, string op, string var, string locCount, string strNextLocCount, string strTa, string app, string nextMnem, string baseL, string baseV) {
 	string  binString, hexString; //required variables for converting
@@ -354,10 +374,7 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 		if (format == 4) { //if it is format 4
 			p = "0"; e = "1";
 			disp = strTa;
-			if (disp.length() < 5) {
-				intTemp = 5 - disp.length();
-				disp = string(intTemp, '0') + disp;
-			}
+			disp = fixLength(disp, 3, '0', true);
 		}
 
 		if (var[0] == '#') { //if it is immediate addressing
@@ -373,10 +390,7 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 					disp = string(intTemp, '0') + disp;
 				}
 				else {
-					if (disp.length() < format + 1) { //add zeros to make it the right format
-						intTemp = (format + 1) - disp.length();
-						disp = string(intTemp, '0') + disp;
-					}
+					disp = fixLength(disp, 5, '0', true);
 				}
 			}
 
@@ -388,10 +402,7 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 					disp = decToHex(TA - intNextLocCount);
 				}
 
-				if (disp.length() < 3) { //add zeros to make it the right format
-					intTemp = 3 - disp.length();
-					disp = string(intTemp, '0') + disp;
-				}
+				disp = fixLength(disp, 3, '0', true);
 			}
 		}
 
@@ -403,10 +414,7 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 			n = "1"; i = "1";
 			intDisp = TA - intNextLocCount;
 			disp = decToHex(intDisp);
-			if (disp.length() < 3) {
-				intTemp = 3 - disp.length();
-				disp = string(intTemp, '0') + disp;
-			}
+			disp = fixLength(disp, 3, '0', true);
 
 			if (intDisp < 0) { //if pc relative is negative
 				if (mnem[0] == 'J') { //jumping
@@ -434,10 +442,7 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 						}
 					}
 					disp = binToHex(disp);
-					if (disp.length() < 3) { //add F to make it the right format
-						intTemp = 3 - disp.length();
-						disp = string(intTemp, 'F') + disp; 
-					}
+					disp = fixLength(disp, 3, 'F', true);//add F to make it the right format
 				} //if jump ends
 
 				else if (var[0] == ' ') {
@@ -451,10 +456,7 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 					else {
 						disp = decToHex(BASE);
 					}
-					if (disp.length() < 3) { //add zeros to make it the right format
-						intTemp = 3 - disp.length();
-						disp = string(intTemp, '0') + disp;
-					}
+					disp = fixLength(disp, 3, '0', true);
 				}
 			}
 		}
@@ -489,6 +491,21 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 
 	return hexString;
 } //end of genObjCode function
+
+
+string fixLength(string variable, int size, char addThis, bool front) {
+	int intTemp = 0;
+	if (variable.length() < size) {
+		intTemp = size - variable.length();
+		if (front == true) {
+			variable = string(intTemp, addThis) + variable;
+		}
+		else {
+			variable = variable + string(intTemp, addThis);
+		}
+	}
+	return variable;
+}
 
 
 string decToHex(int num) {
