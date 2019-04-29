@@ -1,3 +1,9 @@
+/*
+Authors: Dimitrije Prosevski & Matthew Jackson
+Puprose: Final project for Systems Programming 30000
+Date: 04/29/2019
+*/
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -5,29 +11,33 @@
 #include <cstdlib>
 #include <sstream>
 #include <vector>
+//files
 #include "EachLine.h"
 #include "OpTable.h"
 #include "SymTab.h"
 #include "ProgBlocks.h"
-//test
+
 using namespace std;
 
+//functions prototypes
 string decToHex(int num);
 string hexToBin(string hexString);
 string binToHex(string binary);
 string genObjectCode(string sym, string mnemonic, int form, string opcode, string variable, string loc, string nextLoc, string ta, string app, string nextMnemonic, string baseLoc, string baseV);
 unsigned long  hexToDec(string hexString);
 
+//MAIN
 int main() {
 	EachLine * line; //object for each line
-	SymTab * symTab;
-	ProgBlock * progBlock;
-	OpTable opTab; //op table object
+	SymTab * symTab; //object for SYMTAB
+	ProgBlock * progBlock; //object for progBlock
+	OpTable opTab; //object for OPTAB
 	vector<SymTab> symTabVec; //vector for each symbol
 	vector<EachLine> lineObjects; //vector for each line
 	vector <ProgBlock> progBlockVec; //vector for each block
 	ifstream inFile;
-	string fileName = "Files\\prog_blocks.txt";
+	string fileName = "Files\\basic.txt";
+	//temporary variables
 	string getLine;
 	string word;
 	string hex;
@@ -48,13 +58,15 @@ int main() {
 			while (getline(ss, word, '\t')) { //separate lines by words
 				temp = word[0]; //get the first char of the word
 				tempInt = int(temp); //convert it to ASCII
+
 				if (tempInt == 32) { //if space move to next word
 					stopW = 1;
 				}
 				if (stopW == 1) {
 					stopW = 0;
 				}
-				else {
+
+				else { //delimit columns by tab
 					if (col == 1) {
 						line->sym = word; //store the sym onto string
 						cout << line->sym << "\t";
@@ -89,33 +101,34 @@ int main() {
 	int pass = 1;
 	int once = 0;
 
+	//default block initialization
 	progBlock = new ProgBlock;
 	progBlockVec.push_back(*progBlock);
-	progBlockVec[0].name = ""; //default
+	progBlockVec[0].name = ""; 
 	progBlockVec[0].number = 0;
 	progBlockVec[0].address = "0000";
-	
-	//Pass 1: find loc counter
+
+
+
+	//															|||||||||||||||||||||||||||||||||||||||PASS 1|||||||||||||||||||||||||||||||||||||||
 	while (lineObjects[i].com != "END") {
 		int k = 0;
 		bool found = false;
-		if (lineObjects[i].com == "USE") {
-			for (int s = 0; s < (int)progBlockVec.size(); s++) {
-				if (lineObjects[i].var == progBlockVec[s].name) {
-					
-					if (lineObjects[i].var != "") {
-						progBlockVec[s].address = decToHex(hexToDec(progBlockVec[s].length) + hexToDec(progBlockVec[block].address));
-					}
-					lineObjects[i].locCount = progBlockVec[s].length;
-					block = s;
 
-					progBlockVec[s].length = decToHex(hexToDec(lineObjects[i].locCount) + 3);
-					break;
+		//PROG BLOCKS detector
+		if (lineObjects[i].com == "USE") {
+			tempInt = 0;
+			for (int s = 0; s < (int)progBlockVec.size(); s++) {
+				if (progBlockVec[s].length.length() < 4) { //if length != 4 characters long
+					tempLength = 4 - progBlockVec[s].length.length();
+					progBlockVec[s].length = string(tempLength, '0') + progBlockVec[s].length;
 				}
-				if (s == (int)progBlockVec.size()-1) {
+
+				if (s == (int)progBlockVec.size() - 1) { //creating a new one
 					progBlockVec[s].length = decToHex(hexToDec(lineObjects[i].locCount) + lineObjects[i].format);
 					progBlockVec.push_back(*new ProgBlock);
-					progBlockVec[(int)progBlockVec.size()-1].name = lineObjects[i].var;
+					progBlockVec[(int)progBlockVec.size() - 1].name = lineObjects[i].var;
+
 					if (once == 0) {
 						progBlockVec[0].length = lineObjects[i].locCount;
 						once = 1;
@@ -123,33 +136,54 @@ int main() {
 					lineObjects[i].locCount = "0000";
 					count = 0;
 					block = s;
-					progBlockVec[(int)progBlockVec.size()-1].number = block;
+					progBlockVec[(int)progBlockVec.size() - 1].number = block;
+					break;
+				}
+
+				if (lineObjects[i].var == progBlockVec[s].name) { //if found the right block
+					if (lineObjects[i].var != "") { //if not default block
+						progBlockVec[s].address = decToHex(hexToDec(progBlockVec[s].length) + hexToDec(progBlockVec[block].address));
+					}
+
+					if (progBlockVec[block].used == false) {
+						lineObjects[i].locCount = progBlockVec[s].length;
+						progBlock[block].used = true;
+					}
+
+					count = hexToDec(progBlockVec[s].length);
+					block = s;
+
 					break;
 				}
 			}
-		}
+		} //END OF PROG BLOCKS
 
-		if (lineObjects[i].com == "START" || lineObjects[i].sym == ".") {
+
+		if (lineObjects[i].com == "START" || lineObjects[i].sym == ".") { //special cases
 			found = true;
 		}
 
+		//creating a SYMTAB
 		if (lineObjects[i].sym != "" && lineObjects[i].sym != ".") {
-			symTab = new SymTab;
-			symTab->locCount = lineObjects[i].locCount;
-			symTab->symbol = lineObjects[i].sym;
+			symTab = new SymTab; //new obj
+			symTab->locCount = lineObjects[i].locCount; //push loc counter of symbol
+			symTab->symbol = lineObjects[i].sym; //push name of symbol
 			symTabVec.push_back(*symTab);
 		}
 
-		while (found == false && lineObjects[i].com != "") {
-					   
-			if (lineObjects[i].com == "BASE") {
+		while (found == false && lineObjects[i].com != "") { //LOOP THROUGH TO FIND COMMAND
+
+			if (lineObjects[i].com == "BASE") { //save base location and name
 				baseLoc = lineObjects[i - 1].locCount;
 				baseVar = lineObjects[i].var;
 				found == true;
 			}
+
+			//MAIN CHECK: if current command (mnemonic) matches the one from the OP table make found = true
 			if (lineObjects[i].com == opTab.mnem[k] || lineObjects[i].com == "+" + opTab.mnem[k]) {
+
 				if (lineObjects[i].com == "RESW" || lineObjects[i].com == "RESB") {
-					int memRes = 0;
+					int memRes = 0; //string stream to convert from string to int
 					stringstream ss(lineObjects[i].var);
 					ss >> memRes;
 					count += (opTab.format[k] * memRes); //increase loc counter times memory reserved
@@ -174,6 +208,7 @@ int main() {
 			k++;
 		}
 
+		//char or hex strings input
 		if (lineObjects[i].var.length() != 0) {
 			if (int(lineObjects[i].var[1]) == 39) {
 				if (lineObjects[i].var[0] == 'C') {
@@ -185,14 +220,14 @@ int main() {
 			}
 		}
 
-		hex = decToHex(count);
+		hex = decToHex(count); //convert loc counter from decimal to hexadecimal
 		if (hex.length() < 4) { //if length of hex string is not 4 long add zeros to make it 4 long
 			tempLength = 4 - hex.length();
 			hex = string(tempLength, '0') + hex;
 		}
-		lineObjects[i + 1].locCount = hex;
+		lineObjects[i + 1].locCount = hex; //put the hex addres in the next loc counter line
 
-		if (lineObjects[i + 1].locCount == lineObjects[i].locCount) { //if previous loc count is the same as current, make previous ""
+		if (lineObjects[i + 1].locCount == lineObjects[i].locCount && lineObjects[i].com != "EQU" && lineObjects[i].com != "USE") { //if previous loc count is the same as current, make previous ""
 			lineObjects[i].locCount = "";
 		}
 		if (lineObjects[i + 1].com == "END") { //make next location after end empty
@@ -201,6 +236,8 @@ int main() {
 		i++;
 	} //END OF PASS 1
 
+
+	//Print out SYMTAB
 	cout << "\n\n\nSYMTAB:\n";
 	i = 0;
 	while (i != (int)symTabVec.size()) {
@@ -209,10 +246,10 @@ int main() {
 	}
 
 
-	//Pass 2:
+	//															|||||||||||||||||||||||||||||||||||||||PASS 2|||||||||||||||||||||||||||||||||||||||
 	for (int j = 0; j < (int)lineObjects.size() - 1; j++) {
 		bool found = false;
-		for (int s = 0; s < (int)symTabVec.size(); s++) {
+		for (int s = 0; s < (int)symTabVec.size(); s++) { //loop and find symbol in the table
 			if (lineObjects[j].var.find(symTabVec[s].symbol) != std::string::npos) {
 				tempSymLoc = symTabVec[s].locCount;
 				found = true;
@@ -224,22 +261,23 @@ int main() {
 				break;
 			}
 		}
+		//calling the function to generate object code and passing symbol, mnemonic, format, op code, variable(s), current loc counter, next loc counter, symbol location from the symbol table, previous appearance, mnemonic of the next command, base's location and  name
 		lineObjects[j].objCode = genObjectCode(lineObjects[j].sym, lineObjects[j].mnem, lineObjects[j].format, lineObjects[j].op, lineObjects[j].var, lineObjects[j].locCount, lineObjects[j + 1].locCount, tempSymLoc, symTabVec[0].appearance, lineObjects[j + 1].mnem, baseLoc, baseVar);
 		tempSymLoc = "";
-	}
+	} //END OF PASS 2
 
 
-
+	//printing the output
 	cout << "\n\n\n\nAfter assembler:\n\n";
 	i = 0;
-	while (i != lineCount) {
+	while (i != lineCount) { //loop to the number of lines in file
 		if (lineObjects[i].locCount != "" || lineObjects[i].com == "START") {
 			cout << right << lineObjects[i].locCount << "\t";
 		}
 		else {
 			cout << "\t";
 		}
-		cout << i << "\t" << lineObjects[i].sym << "\t"
+		cout << lineObjects[i].sym << "\t"
 			<< lineObjects[i].com << "\t"
 			<< setfill(' ') << setw(10) << lineObjects[i].var << "\t"
 			<< left << setfill(' ') << setw(40) << lineObjects[i].comment << "\t"
@@ -248,43 +286,31 @@ int main() {
 	} //end of print
 
 
-	/*
-	string test1 = "ffffffff";
-	cout << "Print here: " << hexToDec(test1);
-
-
-
-	}*/
-
-
 	cout << string(5, '\n'); //space 5 new lines for clarity
 	inFile.close(); //close input file
-
 
 	system("pause");
 	return 0;
 }
 
-
-
-
+//													|||||||||||||||||||||||||||||||||||||function to generate object code|||||||||||||||||||||||||||||||||||||
 string genObjectCode(string sym, string mnem, int format, string op, string var, string locCount, string strNextLocCount, string strTa, string app, string nextMnem, string baseL, string baseV) {
-	string  binString, hexString;
-	int  intDisp, intTemp = 0;
-	string n = "1", i = "1", x = "0", b = "0", p = "1", e = "0", disp, r1 = "0", r2 = "0";
-	string A = "0", X = "1", L = "2", PC = "8", SW = "9", B = "3", S = "4", T = "5", F = "6";
+	string  binString, hexString; //required variables for converting
+	int  intDisp, intTemp = 0; //temp variables
+	string n = "1", i = "1", x = "0", b = "0", p = "1", e = "0", disp; //nixbpe and disp
+	string r1 = "0", r2 = "0", A = "0", X = "1", L = "2", PC = "8", SW = "9", B = "3", S = "4", T = "5", F = "6"; //format 2 variables
 
-	unsigned long TA = hexToDec(strTa);
-	unsigned long BASE = hexToDec(baseL);
-	unsigned long intLocCount = hexToDec(locCount);
-	unsigned long intNextLocCount = hexToDec(strNextLocCount);
+	unsigned long TA = hexToDec(strTa);												//target address
+	unsigned long BASE = hexToDec(baseL);										//base address
+	unsigned long intLocCount = hexToDec(locCount);						//currect loc counter
+	unsigned long intNextLocCount = hexToDec(strNextLocCount);	//next loc counter
 
 
-	if (format == 1) {
-		if (var[0] == 'X' && int(var[1]) == 39) {
+	if (format == 1) { //for format 1
+		if (var[0] == 'X' && int(var[1]) == 39) { //if it is hex string
 			hexString = var.substr(2, var.length() - 3);
 		}
-		else if (var[0] == 'C' && int(var[1]) == 39) {
+		else if (var[0] == 'C' && int(var[1]) == 39) { //if it is char string
 			for (int i = 2; i < var.length() - 1; i++) {
 				intTemp = int(var[i]);
 				hexString += decToHex(intTemp);
@@ -295,13 +321,11 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 		}
 	}
 
-	if (format == 2) {
+	if (format == 2) { //used switch to recognize the right registers
 		switch (var[0]) {
 		case 'A': r1 = A;   break;
 		case 'X': r1 = X; break;
 		case 'L': r1 = L; break;
-		case 'PC': r1 = PC; break;
-		case 'SW': r1 = SW; break;
 		case 'B': r1 = B; break;
 		case 'S': r1 = S;   break;
 		case 'T': r1 = T; ;    break;
@@ -314,8 +338,6 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 			case 'A': r2 = A;   break;
 			case 'X': r2 = X; break;
 			case 'L': r2 = L; break;
-			case 'PC': r2 = PC; break;
-			case 'SW': r2 = SW; break;
 			case 'B': r2 = B; break;
 			case 'S': r2 = S;   break;
 			case 'T': r2 = T; ;    break;
@@ -324,12 +346,12 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 			}
 		}
 		disp = r1 + r2;
-		hexString = op + disp;
+		hexString = op + disp; //for format 2 object code is op code + r1 + r2
 	}
 
-	if (format == 3 || format == 4) {
-		//n and i
-		if (format == 4) {
+	if (format == 3 || format == 4) { //for format 3 or 4 commands
+
+		if (format == 4) { //if it is format 4
 			p = "0"; e = "1";
 			disp = strTa;
 			if (disp.length() < 5) {
@@ -337,23 +359,25 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 				disp = string(intTemp, '0') + disp;
 			}
 		}
-		if (var[0] == '#') {
+
+		if (var[0] == '#') { //if it is immediate addressing
 			n = "0"; p = "0";
 			if (var[1] > 48 && var[1] <= 57) { //check ascii to see if its a number
-					disp = var.substr(1, var.length());
-					stringstream ss(disp); //get the starting loc from the first line
-					ss >> intTemp;
-					disp = decToHex(intTemp);
-					if (disp.length() < format && format == 3) {
-						intTemp = format - disp.length();
+				disp = var.substr(1, var.length());
+				stringstream ss(disp); //get the starting loc from the first line
+				ss >> intTemp;
+				disp = decToHex(intTemp);
+
+				if (disp.length() <= format && format == 3) { //add zeros to make it the right format
+					intTemp = format - disp.length();
+					disp = string(intTemp, '0') + disp;
+				}
+				else {
+					if (disp.length() < format + 1) { //add zeros to make it the right format
+						intTemp = (format + 1) - disp.length();
 						disp = string(intTemp, '0') + disp;
 					}
-					else {
-						if (disp.length() < format + 1) {
-							intTemp = (format + 1) - disp.length();
-							disp = string(intTemp, '0') + disp;
-						}
-					}
+				}
 			}
 
 			else {
@@ -364,17 +388,18 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 					disp = decToHex(TA - intNextLocCount);
 				}
 
-				if (disp.length() < 3) {
+				if (disp.length() < 3) { //add zeros to make it the right format
 					intTemp = 3 - disp.length();
 					disp = string(intTemp, '0') + disp;
 				}
 			}
 		}
-		else if (var[0] == '@') {
-			disp = app.substr(1, app.length());
+
+		else if (var[0] == '@') { //if indirect addressing
+			disp = app.substr(1, app.length()); //go to the appearance
 			i = "0";
 		}
-		else if (p == "1") {
+		else if (p == "1") { //if pc relative
 			n = "1"; i = "1";
 			intDisp = TA - intNextLocCount;
 			disp = decToHex(intDisp);
@@ -382,8 +407,9 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 				intTemp = 3 - disp.length();
 				disp = string(intTemp, '0') + disp;
 			}
-			if (intDisp < 0) {
-				if (mnem[0] == 'J') {
+
+			if (intDisp < 0) { //if pc relative is negative
+				if (mnem[0] == 'J') { //jumping
 					int i = 0;
 					//making absolute value, converting to binary and doing twos complement
 					intTemp = abs(intDisp);
@@ -408,15 +434,16 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 						}
 					}
 					disp = binToHex(disp);
-					if (disp.length() < 3) {
+					if (disp.length() < 3) { //add F to make it the right format
 						intTemp = 3 - disp.length();
-						disp = string(intTemp, 'F') + disp;
+						disp = string(intTemp, 'F') + disp; 
 					}
-				}
+				} //if jump ends
+
 				else if (var[0] == ' ') {
 					//if end of subroutine go to start of it
 				}
-				else {
+				else { //else use base relative
 					p = "0"; b = "1";
 					if (var == baseV) {
 						disp = "000";
@@ -424,20 +451,22 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 					else {
 						disp = decToHex(BASE);
 					}
-					if (disp.length() < 3) {
+					if (disp.length() < 3) { //add zeros to make it the right format
 						intTemp = 3 - disp.length();
 						disp = string(intTemp, '0') + disp;
 					}
 				}
 			}
 		}
-		//x
+
+		// if variable contains X in the variable string
 		if (var.length() != 0) {
 			if (var[0] == 'X' || var[var.length() - 1] == 'X') {
 				x = "1";
 			}
 		}
-		//exit
+
+		//if symbol is EXIT disp = 000
 		if (sym == "EXIT") {
 			disp = "000";
 		}
@@ -448,10 +477,10 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 		}
 
 		if (op[0] != ' ') {
-			binString = hexToBin(op).substr(0, 6); //convert to binary
+			binString = hexToBin(op).substr(0, 6); //convert to binary first six of the op code
 		}
 
-		binString += n + i + x + b + p + e;
+		binString += n + i + x + b + p + e; //add the rest of the characters
 
 		if (op[0] != ' ') {
 			hexString = binToHex(binString) + disp; //convert to hex
@@ -459,7 +488,7 @@ string genObjectCode(string sym, string mnem, int format, string op, string var,
 	}
 
 	return hexString;
-}
+} //end of genObjCode function
 
 
 string decToHex(int num) {
@@ -475,6 +504,7 @@ string decToHex(int num) {
 	}
 	return hex;
 }
+
 
 string hexToBin(string hexString) {
 	int i = 0;
@@ -525,6 +555,7 @@ string binToHex(string binary) {
 	}
 	return hexString;
 }
+
 
 unsigned long hexToDec(string hexString) {
 	char * theString;
