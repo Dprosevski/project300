@@ -15,5 +15,6 @@ public:
 	int number;
 	string address;
 	string length;
+	bool used = false;
 };
 #endif

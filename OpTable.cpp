@@ -7,21 +7,20 @@ OpTable::OpTable() {
 	mnem.push_back("RESB");			format.push_back(1);		op.push_back(" ");
 	mnem.push_back("BASE");			format.push_back(NULL);		op.push_back(" ");
 	mnem.push_back("BYTE");			format.push_back(1);		op.push_back(" ");
-	//control sections and literals
-	mnem.push_back("EXTDEF");			format.push_back(NULL);		op.push_back(" "); //?
-	mnem.push_back("EXTREF");			format.push_back(NULL);		op.push_back(" "); //?
-	mnem.push_back("LTORG");			format.push_back(NULL);		op.push_back(" "); //?
-	mnem.push_back("EQU");			format.push_back(NULL);		op.push_back(" "); //?
-	mnem.push_back("CSECT");			format.push_back(NULL);		op.push_back(" "); //?
-	mnem.push_back("WORD");			format.push_back(NULL);		op.push_back(" "); //?
-	//macro
-	mnem.push_back("MACRO");			format.push_back(NULL);		op.push_back(" "); //?
-	mnem.push_back("MEND");			format.push_back(NULL);		op.push_back(" "); //?
-	mnem.push_back("RDBUFF");			format.push_back(NULL);		op.push_back(" "); //?
-	mnem.push_back("WRBUFF");			format.push_back(NULL);		op.push_back(" "); //?
-
 	//prog_blocks
-	mnem.push_back("USE");			format.push_back(NULL);		op.push_back(" "); //?
+	mnem.push_back("USE");			format.push_back(NULL);		op.push_back(" ");
+	//control sections and literals
+	mnem.push_back("EXTDEF");			format.push_back(NULL);		op.push_back(" ");
+	mnem.push_back("EXTREF");			format.push_back(NULL);		op.push_back(" ");
+	mnem.push_back("LTORG");			format.push_back(NULL);		op.push_back(" ");
+	mnem.push_back("EQU");			format.push_back(NULL);		op.push_back(" ");
+	mnem.push_back("CSECT");			format.push_back(NULL);		op.push_back(" ");
+	mnem.push_back("WORD");			format.push_back(NULL);		op.push_back(" ");
+	//macros
+	mnem.push_back("MACRO");			format.push_back(NULL);		op.push_back(" ");
+	mnem.push_back("MEND");			format.push_back(NULL);		op.push_back(" ");
+	mnem.push_back("RDBUFF");			format.push_back(NULL);		op.push_back(" ");
+	mnem.push_back("WRBUFF");			format.push_back(NULL);		op.push_back(" ");
 	mnem.push_back("LDS");			format.push_back(3);		op.push_back("6C");
 	mnem.push_back("LDT");			format.push_back(3);		op.push_back("74");
 	mnem.push_back("LDX");			format.push_back(3);		op.push_back("04");
