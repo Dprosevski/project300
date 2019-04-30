@@ -37,7 +37,7 @@ int main() {
 	vector<EachLine> lineObjects; //vector for each line
 	vector <ProgBlock> progBlockVec; //vector for each block
 	ifstream inFile;
-	string fileName = "Files\\basic.txt";
+	string fileName = "Files\\functions.txt";
 	//temporary variables
 	string getLine;
 	string word;
@@ -293,13 +293,14 @@ int main() {
 	while (i != lineCount) { //loop to the number of lines in file
 		cout << "T";
 		tempInt = 0;
-		while (i != lineCount && tempInt != 29) { //loop to the number of lines in file
-			tempInt = i;
+		while (i != lineCount && tempInt <= 58) { //1D = 29 -> 29 * 2 = 58
+			tempInt += lineObjects[i].objCode.length();
 			cout << lineObjects[i].objCode;
 			i++;
 		}
+		cout << endl;
 	}
-	cout << "\nE" << lineObjects[1].locCount<< endl;
+	cout << "E" << lineObjects[1].locCount<< endl;
 
 
 	cout << string(5, '\n'); //space 5 new lines for clarity
