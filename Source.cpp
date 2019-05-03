@@ -283,25 +283,26 @@ int main() {
 	} //end of print
 
 	//printing the object program
-	lineObjects[0].sym = fixLength(lineObjects[0].sym, 6, ' ', false);
-	lineObjects[1].locCount = fixLength(lineObjects[1].locCount, 6, '0', true);
-	lastLoc = fixLength(lastLoc, 6, '0', true);
+	if (fileName == "Files\\functions.txt" || fileName == "Files\\basic.txt") {
+		lineObjects[0].sym = fixLength(lineObjects[0].sym, 6, ' ', false);
+		lineObjects[1].locCount = fixLength(lineObjects[1].locCount, 6, '0', true);
+		lastLoc = fixLength(lastLoc, 6, '0', true);
 
-	cout << "\n\n\n\nObject Program:\n\n";
-	cout << "H" << lineObjects[0].sym.substr(0,6) << lineObjects[1].locCount << lastLoc<<endl;
-	i = 0;
-	while (i != lineCount) { //loop to the number of lines in file
-		cout << "T";
-		tempInt = 0;
-		while (i != lineCount && tempInt <= 58) { //1D = 29 -> 29 * 2 = 58
-			tempInt += lineObjects[i].objCode.length();
-			cout << lineObjects[i].objCode;
-			i++;
+		cout << "\n\n\n\nObject Program:\n\n";
+		cout << "H" << lineObjects[0].sym.substr(0,6) << lineObjects[1].locCount << lastLoc<<endl;
+		i = 0;
+		while (i != lineCount) { //loop to the number of lines in file
+			cout << "T";
+			tempInt = 0;
+			while (i != lineCount && tempInt <= 58) { //1D = 29 -> 29 * 2 = 58
+				tempInt += lineObjects[i].objCode.length();
+				cout << lineObjects[i].objCode;
+				i++;
+			}
+			cout << endl;
 		}
-		cout << endl;
+		cout << "E" << lineObjects[1].locCount<< endl;
 	}
-	cout << "E" << lineObjects[1].locCount<< endl;
-
 
 	cout << string(5, '\n'); //space 5 new lines for clarity
 	inFile.close(); //close input file
